@@ -1829,86 +1829,83 @@ var e,
     (console.info("[性斗学园脚本] 按钮被点击！"), B());
   }));
 
-  // 拖拽滚动修复：绑定在 document.body 捕获阶段，不受 Vue 重渲染影响
-  setTimeout(function() {
-    var dragState = null;
+// 拖拽滚动修复：每次状态栏打开时重新绑定
+(function() {
+  var dragState = null;
+  var alreadyBound = false;
 
-    document.body.addEventListener('mousedown', function(e) {
+  function bindDragToElement(el, horizontalOnly) {
+    el.addEventListener('mousedown', function(e) {
       if (e.button !== 0) return;
-
-      var path = e.composedPath ? e.composedPath() : [];
-      var targetEl = null;
-      var isHorizontalOnly = false;
-
-      for (var i = 0; i < path.length; i++) {
-        var node = path[i];
-        if (!node.classList) continue;
-        if (node.classList.contains('bottom-nav')) {
-          targetEl = node;
-          isHorizontalOnly = true;
-          break;
-        }
-        if (node.classList.contains('map-container')) {
-          targetEl = node;
-          isHorizontalOnly = false;
-          break;
-        }
-      }
-
-      if (!targetEl) return;
-
       dragState = {
-        el: targetEl,
+        el: el,
         startX: e.clientX,
         startY: e.clientY,
-        scrollLeft: targetEl.scrollLeft,
-        scrollTop: targetEl.scrollTop,
-        horizontalOnly: isHorizontalOnly,
+        scrollLeft: el.scrollLeft,
+        scrollTop: el.scrollTop,
+        horizontalOnly: horizontalOnly,
         dragging: false
       };
-    }, true);
+    });
+  }
 
-    document.body.addEventListener('mousemove', function(e) {
-      if (!dragState) return;
-      var dx = e.clientX - dragState.startX;
-      var dy = e.clientY - dragState.startY;
+  function tryBind() {
+    var nav = document.querySelector('.bottom-nav');
+    var map = document.querySelector('.map-container');
+    if (!nav && !map) return;
 
-      if (!dragState.dragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
-        dragState.dragging = true;
-        dragState.el.style.cursor = 'grabbing';
+    if (nav && !nav.__dragBound) {
+      nav.__dragBound = true;
+      bindDragToElement(nav, true);
+      nav.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        var delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+        nav.scrollLeft += delta;
+      }, { passive: false });
+      console.info('[拖拽修复] bottom-nav 绑定成功');
+    }
+
+    if (map && !map.__dragBound) {
+      map.__dragBound = true;
+      bindDragToElement(map, false);
+      console.info('[拖拽修复] map-container 绑定成功');
+    }
+  }
+
+  // mousemove 和 mouseup 始终在 document 上监听，不受 Vue 重渲染影响
+  document.addEventListener('mousemove', function(e) {
+    if (!dragState) return;
+    var dx = e.clientX - dragState.startX;
+    var dy = e.clientY - dragState.startY;
+
+    if (!dragState.dragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+      dragState.dragging = true;
+      dragState.el.style.cursor = 'grabbing';
+    }
+
+    if (dragState.dragging) {
+      dragState.el.scrollLeft = dragState.scrollLeft - dx;
+      if (!dragState.horizontalOnly) {
+        dragState.el.scrollTop = dragState.scrollTop - dy;
       }
+    }
+  });
 
-      if (dragState.dragging) {
-        dragState.el.scrollLeft = dragState.scrollLeft - dx;
-        if (!dragState.horizontalOnly) {
-          dragState.el.scrollTop = dragState.scrollTop - dy;
-        }
-      }
-    }, true);
+  document.addEventListener('mouseup', function() {
+    if (dragState) {
+      if (dragState.el) dragState.el.style.cursor = '';
+      dragState = null;
+    }
+  });
 
-    document.body.addEventListener('mouseup', function() {
-      if (dragState) {
-        if (dragState.el) dragState.el.style.cursor = '';
-        dragState = null;
-      }
-    }, true);
+  // 用 MutationObserver 监听 DOM 变化，每次元素出现时绑定
+  var observer = new MutationObserver(function() {
+    tryBind();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 
-    document.body.addEventListener('wheel', function(e) {
-      var path = e.composedPath ? e.composedPath() : [];
-      for (var i = 0; i < path.length; i++) {
-        var node = path[i];
-        if (!node.classList) continue;
-        if (node.classList.contains('bottom-nav')) {
-          e.preventDefault();
-          var delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-          node.scrollLeft += delta;
-          break;
-        }
-      }
-    }, { passive: false, capture: true });
-
-    console.info('[拖拽修复] 已绑定到 document.body（捕获阶段）');
-  }, 1000);
+  console.info('[拖拽修复] MutationObserver 已启动');
+})();
 
 }),
 $(window).on("pagehide", () => {
