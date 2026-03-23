@@ -1828,78 +1828,89 @@ var e,
   eventOn(getButtonEvent("打开状态栏"), () => {
     (console.info("[性斗学园脚本] 按钮被点击！"), B());
   }));
-
+  
 (function() {
   var dragState = null;
 
-  function bindDragToElement(el, horizontalOnly) {
-    el.__dragBound = true;
-    el.addEventListener('mousedown', function(e) {
-      if (e.button !== 0) return;
-      dragState = {
-        el: el,
-        startX: e.clientX,
-        startY: e.clientY,
-        scrollLeft: el.scrollLeft,
-        scrollTop: el.scrollTop,
-        horizontalOnly: horizontalOnly,
-        dragging: false
-      };
-    });
-    if (horizontalOnly) {
-      el.addEventListener('wheel', function(e) {
-        e.preventDefault();
-        var delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-        el.scrollLeft += delta;
-      }, { passive: false });
-    }
-    console.info('[拖拽修复] 绑定成功：', el.className);
-  }
+  // mousedown：在捕获阶段判断点击位置
+  document.addEventListener('mousedown', function(e) {
+    if (e.button !== 0) return;
 
-  function tryBind() {
-    var nav = document.querySelector('.bottom-nav');
-    var map = document.querySelector('.map-container');
-    if (nav && !nav.__dragBound) {
-      bindDragToElement(nav, true);
-    }
-    if (map && !map.__dragBound) {
-      bindDragToElement(map, false);
-    }
-  }
+    // 从点击目标向上查找，判断是否在目标容器内
+    var node = e.target;
+    var targetEl = null;
+    var horizontalOnly = false;
 
-  // mousemove / mouseup 始终挂在 document，不受 Vue 重渲染影响
+    while (node && node !== document.body) {
+      if (node.classList) {
+        if (node.classList.contains('bottom-nav')) {
+          targetEl = node;
+          horizontalOnly = true;
+          break;
+        }
+        if (node.classList.contains('map-container')) {
+          targetEl = node;
+          horizontalOnly = false;
+          break;
+        }
+      }
+      node = node.parentNode;
+    }
+
+    if (!targetEl) return;
+
+    dragState = {
+      el: targetEl,
+      startX: e.clientX,
+      startY: e.clientY,
+      scrollLeft: targetEl.scrollLeft,
+      scrollTop: targetEl.scrollTop,
+      horizontalOnly: horizontalOnly,
+      dragging: false
+    };
+  }, true); // 捕获阶段
+
   document.addEventListener('mousemove', function(e) {
     if (!dragState) return;
     var dx = e.clientX - dragState.startX;
     var dy = e.clientY - dragState.startY;
+
     if (!dragState.dragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
       dragState.dragging = true;
       dragState.el.style.cursor = 'grabbing';
     }
+
     if (dragState.dragging) {
       dragState.el.scrollLeft = dragState.scrollLeft - dx;
       if (!dragState.horizontalOnly) {
         dragState.el.scrollTop = dragState.scrollTop - dy;
       }
+      e.preventDefault();
     }
-  });
+  }, true); // 捕获阶段
 
   document.addEventListener('mouseup', function() {
     if (dragState) {
       if (dragState.el) dragState.el.style.cursor = '';
       dragState = null;
     }
-  });
+  }, true);
 
-  // MutationObserver：延迟一帧再绑定，等 Vue 当前渲染批次完全结束
-  var observer = new MutationObserver(function() {
-    setTimeout(function() {
-      tryBind();
-    }, 0);
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
+  // 滚轮水平滚动 bottom-nav
+  document.addEventListener('wheel', function(e) {
+    var node = e.target;
+    while (node && node !== document.body) {
+      if (node.classList && node.classList.contains('bottom-nav')) {
+        e.preventDefault();
+        var delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+        node.scrollLeft += delta;
+        return;
+      }
+      node = node.parentNode;
+    }
+  }, { passive: false, capture: true });
 
-  console.info('[拖拽修复] MutationObserver 已启动');
+  console.info('[拖拽修复] 已注册到 document（捕获阶段），无需等待元素）');
 })();
 
 }),
