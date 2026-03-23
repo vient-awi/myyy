@@ -1829,12 +1829,11 @@ var e,
     (console.info("[性斗学园脚本] 按钮被点击！"), B());
   }));
 
-// 拖拽滚动修复：每次状态栏打开时重新绑定
 (function() {
   var dragState = null;
-  var alreadyBound = false;
 
   function bindDragToElement(el, horizontalOnly) {
+    el.__dragBound = true;
     el.addEventListener('mousedown', function(e) {
       if (e.button !== 0) return;
       dragState = {
@@ -1847,42 +1846,36 @@ var e,
         dragging: false
       };
     });
+    if (horizontalOnly) {
+      el.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        var delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+        el.scrollLeft += delta;
+      }, { passive: false });
+    }
+    console.info('[拖拽修复] 绑定成功：', el.className);
   }
 
   function tryBind() {
     var nav = document.querySelector('.bottom-nav');
     var map = document.querySelector('.map-container');
-    if (!nav && !map) return;
-
     if (nav && !nav.__dragBound) {
-      nav.__dragBound = true;
       bindDragToElement(nav, true);
-      nav.addEventListener('wheel', function(e) {
-        e.preventDefault();
-        var delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-        nav.scrollLeft += delta;
-      }, { passive: false });
-      console.info('[拖拽修复] bottom-nav 绑定成功');
     }
-
     if (map && !map.__dragBound) {
-      map.__dragBound = true;
       bindDragToElement(map, false);
-      console.info('[拖拽修复] map-container 绑定成功');
     }
   }
 
-  // mousemove 和 mouseup 始终在 document 上监听，不受 Vue 重渲染影响
+  // mousemove / mouseup 始终挂在 document，不受 Vue 重渲染影响
   document.addEventListener('mousemove', function(e) {
     if (!dragState) return;
     var dx = e.clientX - dragState.startX;
     var dy = e.clientY - dragState.startY;
-
     if (!dragState.dragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
       dragState.dragging = true;
       dragState.el.style.cursor = 'grabbing';
     }
-
     if (dragState.dragging) {
       dragState.el.scrollLeft = dragState.scrollLeft - dx;
       if (!dragState.horizontalOnly) {
@@ -1898,9 +1891,11 @@ var e,
     }
   });
 
-  // 用 MutationObserver 监听 DOM 变化，每次元素出现时绑定
+  // MutationObserver：延迟一帧再绑定，等 Vue 当前渲染批次完全结束
   var observer = new MutationObserver(function() {
-    tryBind();
+    setTimeout(function() {
+      tryBind();
+    }, 0);
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
