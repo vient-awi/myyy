@@ -1882,7 +1882,6 @@ var e,
     nav.scrollLeft += delta;
   }, { passive: false });
 })();
-  
               }),
               $(window).on("pagehide", () => {
                 (toastr.info("性斗学园数值计算脚本已关闭", "脚本卸载", {
