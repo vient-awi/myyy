@@ -1828,79 +1828,83 @@ var e,
 
 k(),
 
-// 拖拽修复：延迟到 Vue 挂载完成后注册
-setTimeout(function() {
-  var dragState = null;
+k(),
 
-  document.addEventListener('mousedown', function(e) {
-    if (e.button !== 0) return;
-    var node = e.target;
-    var targetEl = null;
-    var horizontalOnly = false;
+// 拖拽修复
+(function() {
+  setTimeout(function() {
+    var dragState = null;
 
-    while (node && node !== document.body) {
-      if (node.classList) {
-        if (node.classList.contains('bottom-nav')) {
-          targetEl = node; horizontalOnly = true; break;
+    document.addEventListener('mousedown', function(e) {
+      if (e.button !== 0) return;
+      var node = e.target;
+      var targetEl = null;
+      var horizontalOnly = false;
+
+      while (node && node !== document.body) {
+        if (node.classList) {
+          if (node.classList.contains('bottom-nav')) {
+            targetEl = node; horizontalOnly = true; break;
+          }
+          if (node.classList.contains('map-container')) {
+            targetEl = node; horizontalOnly = false; break;
+          }
         }
-        if (node.classList.contains('map-container')) {
-          targetEl = node; horizontalOnly = false; break;
+        node = node.parentNode;
+      }
+
+      if (!targetEl) return;
+
+      dragState = {
+        el: targetEl, startX: e.clientX, startY: e.clientY,
+        scrollLeft: targetEl.scrollLeft, scrollTop: targetEl.scrollTop,
+        horizontalOnly: horizontalOnly, dragging: false
+      };
+    }, true);
+
+    document.addEventListener('mousemove', function(e) {
+      if (!dragState) return;
+      var dx = e.clientX - dragState.startX;
+      var dy = e.clientY - dragState.startY;
+      if (!dragState.dragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+        dragState.dragging = true;
+        dragState.el.style.cursor = 'grabbing';
+      }
+      if (dragState.dragging) {
+        dragState.el.scrollLeft = dragState.scrollLeft - dx;
+        if (!dragState.horizontalOnly) {
+          dragState.el.scrollTop = dragState.scrollTop - dy;
         }
       }
-      node = node.parentNode;
-    }
+    }, true);
 
-    if (!targetEl) return;
-
-    dragState = {
-      el: targetEl, startX: e.clientX, startY: e.clientY,
-      scrollLeft: targetEl.scrollLeft, scrollTop: targetEl.scrollTop,
-      horizontalOnly: horizontalOnly, dragging: false
-    };
-  }, true);
-
-  document.addEventListener('mousemove', function(e) {
-    if (!dragState) return;
-    var dx = e.clientX - dragState.startX;
-    var dy = e.clientY - dragState.startY;
-    if (!dragState.dragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
-      dragState.dragging = true;
-      dragState.el.style.cursor = 'grabbing';
-    }
-    if (dragState.dragging) {
-      dragState.el.scrollLeft = dragState.scrollLeft - dx;
-      if (!dragState.horizontalOnly) {
-        dragState.el.scrollTop = dragState.scrollTop - dy;
+    document.addEventListener('mouseup', function() {
+      if (dragState) {
+        if (dragState.el) dragState.el.style.cursor = '';
+        dragState = null;
       }
-    }
-  }, true);
+    }, true);
 
-  document.addEventListener('mouseup', function() {
-    if (dragState) {
-      if (dragState.el) dragState.el.style.cursor = '';
-      dragState = null;
-    }
-  }, true);
-
-  document.addEventListener('wheel', function(e) {
-    var node = e.target;
-    while (node && node !== document.body) {
-      if (node.classList && node.classList.contains('bottom-nav')) {
-        e.preventDefault();
-        var delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-        node.scrollLeft += delta;
-        return;
+    document.addEventListener('wheel', function(e) {
+      var node = e.target;
+      while (node && node !== document.body) {
+        if (node.classList && node.classList.contains('bottom-nav')) {
+          e.preventDefault();
+          var delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+          node.scrollLeft += delta;
+          return;
+        }
+        node = node.parentNode;
       }
-      node = node.parentNode;
-    }
-  }, { passive: false, capture: true });
+    }, { passive: false, capture: true });
 
-  console.info('[拖拽修复] 已注册');
-}, 0);
+    console.info('[拖拽修复] 已注册');
+  }, 0);
+})(),
 
-  eventOn(getButtonEvent("打开状态栏"), () => {
-    (console.info("[性斗学园脚本] 按钮被点击！"), B());
-  }));
+eventOn(getButtonEvent("打开状态栏"), () => {
+  (console.info("[性斗学园脚本] 按钮被点击！"), B());
+}));
 
 (function() {
   var dragState = null;
