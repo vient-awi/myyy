@@ -1805,96 +1805,114 @@ var e,
                     "[性斗学园脚本] tavern_events.MESSAGE_RECEIVED 不可用，无法监听对话事件",
                   ),
               $(() => {
-                (toastr.success("性斗学园数值计算脚本已启动", "脚本加载成功", {
-                  timeOut: 3e3,
-                  progressBar: !0,
-                }),
-                  errorCatched(async () => {
-                    (await E())
-                      ? (h(),
-                        console.info("[性斗学园脚本] 初始化：开始首次计算"),
-                        await v(),
-                        await x())
-                      : toastr.error(
-                          "MVU 初始化超时，脚本功能可能受限",
-                          "初始化警告",
-                          { timeOut: 5e3 },
-                        );
-                  })(),
-                  setInterval(async () => {
-                    (p || (await v()), await x());
-                  }, 1e4),
-                  k(),
-                  eventOn(getButtonEvent("打开状态栏"), () => {
-                    (console.info("[性斗学园脚本] 按钮被点击！"), B());
-                  }));
-                // 在脚本加载后注入桌面端拖拽滚动支持
-(function() {
-  console.info("[拖拽修复]代码已执行");
-  function enableDragScroll(selector, options = {}) {
-    const { horizontal = true, vertical = true } = options;
+  (toastr.success("性斗学园数值计算脚本已启动", "脚本加载成功", {
+    timeOut: 3e3,
+    progressBar: !0,
+  }),
+  errorCatched(async () => {
+    (await E())
+      ? (h(),
+        console.info("[性斗学园脚本] 初始化：开始首次计算"),
+        await v(),
+        await x())
+      : toastr.error(
+          "MVU 初始化超时，脚本功能可能受限",
+          "初始化警告",
+          { timeOut: 5e3 },
+        );
+  })(),
+  setInterval(async () => {
+    (p || (await v()), await x());
+  }, 1e4),
+  k(),
+  eventOn(getButtonEvent("打开状态栏"), () => {
+    (console.info("[性斗学园脚本] 按钮被点击！"), B());
+  }));
 
-    document.addEventListener('mousedown', function(e) {
-      const el = e.target.closest(selector);
-      if (!el) return;
-      // 忽略按钮等交互元素上的拖拽
-      if (e.target.closest('button, a, input, select')) return;
-      if (e.button !== 0) return; // 仅左键
-
-      e.preventDefault();
-      const startX = e.clientX;
-      const startY = e.clientY;
-      const scrollLeft = el.scrollLeft;
-      const scrollTop = el.scrollTop;
-      let moved = false;
-
-      el.style.cursor = 'grabbing';
-      el.style.userSelect = 'none';
-
-      function onMouseMove(e) {
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
-        if (horizontal) el.scrollLeft = scrollLeft - dx;
-        if (vertical) el.scrollTop = scrollTop - dy;
+  // 拖拽滚动修复：等待元素渲染后再绑定
+  function waitAndBindDrag(selector, horizontal, vertical) {
+    var el = document.querySelector(selector);
+    if (el) {
+      bindDrag(el, horizontal, vertical);
+      return;
+    }
+    var observer = new MutationObserver(function() {
+      var el = document.querySelector(selector);
+      if (el) {
+        observer.disconnect();
+        bindDrag(el, horizontal, vertical);
+        console.info("[拖拽修复] 已绑定：" + selector);
       }
-
-      function onMouseUp() {
-        el.style.cursor = '';
-        el.style.userSelect = '';
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-      }
-
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
     });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  // 底部导航栏：仅水平拖拽
-  enableDragScroll('.bottom-nav', { horizontal: true, vertical: false });
-  enableDragScroll('.map-container', { horizontal: true, vertical: true });
-  document.addEventListener('wheel', function(e) {
-    const nav = e.target.closest('.bottom-nav');
-    if (!nav) return;
-    e.preventDefault();
-    const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-    nav.scrollLeft += delta;
-  }, { passive: false });
-})();
-              }),
-              $(window).on("pagehide", () => {
-                (toastr.info("性斗学园数值计算脚本已关闭", "脚本卸载", {
-                  timeOut: 2e3,
-                  progressBar: !0,
-                }),
-                  C && (C.unmount(), (C = null)),
-                  g && (g.remove(), (g = null)),
-                  (0, i.sU)(),
-                  (0, i.wk)());
-              }),
-              console.info("性斗学园数值计算脚本已加载"),
-              a());
+  function bindDrag(el, horizontal, vertical) {
+    var isDragging = false;
+    var startX = 0, startY = 0;
+    var startScrollLeft = 0, startScrollTop = 0;
+    var THRESHOLD = 5;
+
+    el.addEventListener('mousedown', function(e) {
+      if (e.button !== 0) return;
+      isDragging = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      startScrollLeft = el.scrollLeft;
+      startScrollTop = el.scrollTop;
+
+      function onMove(e) {
+        var dx = e.clientX - startX;
+        var dy = e.clientY - startY;
+        if (!isDragging && (Math.abs(dx) > THRESHOLD || Math.abs(dy) > THRESHOLD)) {
+          isDragging = true;
+          el.style.cursor = 'grabbing';
+        }
+        if (isDragging) {
+          if (horizontal) el.scrollLeft = startScrollLeft - dx;
+          if (vertical) el.scrollTop = startScrollTop - dy;
+        }
+      }
+
+      function onUp() {
+        el.style.cursor = '';
+        isDragging = false;
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+
+    // 滚轮水平滚动（仅对底部导航栏）
+    if (horizontal && !vertical) {
+      el.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        var delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+        el.scrollLeft += delta;
+      }, { passive: false });
+    }
+  }
+
+  // 底部导航栏：仅水平
+  waitAndBindDrag('.bottom-nav', true, false);
+  // 地图容器：水平+垂直
+  waitAndBindDrag('.map-container', true, true);
+
+}),
+$(window).on("pagehide", () => {
+  (toastr.info("性斗学园数值计算脚本已关闭", "脚本卸载", {
+    timeOut: 2e3,
+    progressBar: !0,
+  }),
+  C && (C.unmount(), (C = null)),
+  g && (g.remove(), (g = null)),
+  (0, i.sU)(),
+  (0, i.wk)());
+}),
+console.info("性斗学园数值计算脚本已加载"),
+a());
           } catch (F) {
             a(F);
           }
