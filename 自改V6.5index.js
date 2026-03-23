@@ -1826,10 +1826,6 @@ var e,
   }, 1e4),
   k(),
 
-k(),
-
-k(),
-
 // 拖拽修复
 (function() {
   setTimeout(function() {
