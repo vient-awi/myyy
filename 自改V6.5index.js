@@ -1895,7 +1895,7 @@ var e,
     }, { passive: false, capture: true });
 
     console.info('[拖拽修复] 已注册');
-  }, 0);
+  }, 2000);
 })(),
 
 eventOn(getButtonEvent("打开状态栏"), () => {
