@@ -1830,7 +1830,7 @@ var e,
                   }));
                 // 在脚本加载后注入桌面端拖拽滚动支持
 (function() {
-  // 通用的鼠标拖拽滚动功能
+  console.log('[拖拽修复]代码已执行');
   function enableDragScroll(selector, options = {}) {
     const { horizontal = true, vertical = true } = options;
 
