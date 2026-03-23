@@ -1828,6 +1828,65 @@ var e,
                   eventOn(getButtonEvent("打开状态栏"), () => {
                     (console.info("[性斗学园脚本] 按钮被点击！"), B());
                   }));
+                // 在脚本加载后注入桌面端拖拽滚动支持
+(function() {
+  // 通用的鼠标拖拽滚动功能
+  function enableDragScroll(selector, options = {}) {
+    const { horizontal = true, vertical = true } = options;
+
+    document.addEventListener('mousedown', function(e) {
+      const el = e.target.closest(selector);
+      if (!el) return;
+      // 忽略按钮等交互元素上的拖拽
+      if (e.target.closest('button, a, input, select')) return;
+      if (e.button !== 0) return; // 仅左键
+
+      e.preventDefault();
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const scrollLeft = el.scrollLeft;
+      const scrollTop = el.scrollTop;
+      let moved = false;
+
+      el.style.cursor = 'grabbing';
+      el.style.userSelect = 'none';
+
+      function onMouseMove(e) {
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+        if (horizontal) el.scrollLeft = scrollLeft - dx;
+        if (vertical) el.scrollTop = scrollTop - dy;
+      }
+
+      function onMouseUp() {
+        el.style.cursor = '';
+        el.style.userSelect = '';
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+  }
+
+  // 底部导航栏：仅水平拖拽
+  enableDragScroll('.bottom-nav', { horizontal: true, vertical: false });
+
+  // 地图容器：水平+垂直拖拽
+  enableDragScroll('.map-container', { horizontal: true, vertical: true });
+
+  // 额外修复：确保底部导航栏的鼠标滚轮水平滚动生效
+  document.addEventListener('wheel', function(e) {
+    const nav = e.target.closest('.bottom-nav');
+    if (!nav) return;
+    e.preventDefault();
+    const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    nav.scrollLeft += delta;
+  }, { passive: false });
+})();
+  
               }),
               $(window).on("pagehide", () => {
                 (toastr.info("性斗学园数值计算脚本已关闭", "脚本卸载", {
