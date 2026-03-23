@@ -1829,76 +1829,86 @@ var e,
     (console.info("[性斗学园脚本] 按钮被点击！"), B());
   }));
 
-  // 拖拽滚动修复：等待元素渲染后再绑定
-  function waitAndBindDrag(selector, horizontal, vertical) {
-    var el = document.querySelector(selector);
-    if (el) {
-      bindDrag(el, horizontal, vertical);
-      return;
-    }
-    var observer = new MutationObserver(function() {
-      var el = document.querySelector(selector);
-      if (el) {
-        observer.disconnect();
-        bindDrag(el, horizontal, vertical);
-        console.info("[拖拽修复] 已绑定：" + selector);
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
+  // 拖拽滚动修复：绑定在 document.body 捕获阶段，不受 Vue 重渲染影响
+  setTimeout(function() {
+    var dragState = null;
 
-  function bindDrag(el, horizontal, vertical) {
-    var isDragging = false;
-    var startX = 0, startY = 0;
-    var startScrollLeft = 0, startScrollTop = 0;
-    var THRESHOLD = 5;
-
-    el.addEventListener('mousedown', function(e) {
+    document.body.addEventListener('mousedown', function(e) {
       if (e.button !== 0) return;
-      isDragging = false;
-      startX = e.clientX;
-      startY = e.clientY;
-      startScrollLeft = el.scrollLeft;
-      startScrollTop = el.scrollTop;
 
-      function onMove(e) {
-        var dx = e.clientX - startX;
-        var dy = e.clientY - startY;
-        if (!isDragging && (Math.abs(dx) > THRESHOLD || Math.abs(dy) > THRESHOLD)) {
-          isDragging = true;
-          el.style.cursor = 'grabbing';
+      var path = e.composedPath ? e.composedPath() : [];
+      var targetEl = null;
+      var isHorizontalOnly = false;
+
+      for (var i = 0; i < path.length; i++) {
+        var node = path[i];
+        if (!node.classList) continue;
+        if (node.classList.contains('bottom-nav')) {
+          targetEl = node;
+          isHorizontalOnly = true;
+          break;
         }
-        if (isDragging) {
-          if (horizontal) el.scrollLeft = startScrollLeft - dx;
-          if (vertical) el.scrollTop = startScrollTop - dy;
+        if (node.classList.contains('map-container')) {
+          targetEl = node;
+          isHorizontalOnly = false;
+          break;
         }
       }
 
-      function onUp() {
-        el.style.cursor = '';
-        isDragging = false;
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
+      if (!targetEl) return;
+
+      dragState = {
+        el: targetEl,
+        startX: e.clientX,
+        startY: e.clientY,
+        scrollLeft: targetEl.scrollLeft,
+        scrollTop: targetEl.scrollTop,
+        horizontalOnly: isHorizontalOnly,
+        dragging: false
+      };
+    }, true);
+
+    document.body.addEventListener('mousemove', function(e) {
+      if (!dragState) return;
+      var dx = e.clientX - dragState.startX;
+      var dy = e.clientY - dragState.startY;
+
+      if (!dragState.dragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+        dragState.dragging = true;
+        dragState.el.style.cursor = 'grabbing';
       }
 
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
+      if (dragState.dragging) {
+        dragState.el.scrollLeft = dragState.scrollLeft - dx;
+        if (!dragState.horizontalOnly) {
+          dragState.el.scrollTop = dragState.scrollTop - dy;
+        }
+      }
+    }, true);
 
-    // 滚轮水平滚动（仅对底部导航栏）
-    if (horizontal && !vertical) {
-      el.addEventListener('wheel', function(e) {
-        e.preventDefault();
-        var delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-        el.scrollLeft += delta;
-      }, { passive: false });
-    }
-  }
+    document.body.addEventListener('mouseup', function() {
+      if (dragState) {
+        if (dragState.el) dragState.el.style.cursor = '';
+        dragState = null;
+      }
+    }, true);
 
-  // 底部导航栏：仅水平
-  waitAndBindDrag('.bottom-nav', true, false);
-  // 地图容器：水平+垂直
-  waitAndBindDrag('.map-container', true, true);
+    document.body.addEventListener('wheel', function(e) {
+      var path = e.composedPath ? e.composedPath() : [];
+      for (var i = 0; i < path.length; i++) {
+        var node = path[i];
+        if (!node.classList) continue;
+        if (node.classList.contains('bottom-nav')) {
+          e.preventDefault();
+          var delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+          node.scrollLeft += delta;
+          break;
+        }
+      }
+    }, { passive: false, capture: true });
+
+    console.info('[拖拽修复] 已绑定到 document.body（捕获阶段）');
+  }, 1000);
 
 }),
 $(window).on("pagehide", () => {
