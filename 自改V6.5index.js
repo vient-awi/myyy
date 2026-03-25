@@ -8487,7 +8487,7 @@ a());
             }
             const r = [
                 { key: "all", label: "全部", icon: "fas fa-th" },
-                { key: "male_defeat", label: "女U战败", icon: "fas fa-mars" },
+                { key: "male_defeat", label: "女U战败", icon: "fas fa-venus" },
                 {
                   key: "male_victory",
                   label: "女U战胜",
@@ -8496,7 +8496,7 @@ a());
                 {
                   key: "female_defeat",
                   label: "男U战败",
-                  icon: "fas fa-venus",
+                  icon: "fas fa-mars",
                 },
                 {
                   key: "female_victory",
@@ -8660,10 +8660,10 @@ a());
                           resultKey: i,
                         });
                   };
-                  (n(a.male.defeat, "male", "defeat"),
-                    n(a.male.victory, "male", "victory"),
-                    n(a.female.defeat, "female", "defeat"),
-                    n(a.female.victory, "female", "victory"));
+                  (n(a.female.defeat, "male", "defeat"),
+                    n(a.female.victory, "male", "victory"),
+                    n(a.male.defeat, "female", "defeat"),
+                    n(a.male.victory, "female", "victory"));
                 }
                 return e;
               }),
