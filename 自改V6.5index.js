@@ -8695,8 +8695,7 @@ a());
                 let e = Be.value;
                 if ("all" !== ne.value) {
                   const [a, n] = ne.value.split('_');
-                  const flippedGender = a === 'male' ? 'female' : 'male';
-                  e = e.filter(e => e.genderKey === flippedGender && e.resultKey === n); 
+                  e = e.filter((e) => e.genderKey === a && e.resultKey === n); 
                 }
                 return (
                   te.value &&
@@ -8712,7 +8711,8 @@ a());
                 let e = Be.value;
                 if ("all" !== ne.value) {
                   const [a, n] = ne.value.split("_");
-                  e = e.filter((e) => e.genderKey === a && e.resultKey === n);
+                  const mappedGender = a === 'male' ? 'female' : 'male';
+                  e = e.filter(e => e.genderKey === mappedGender && e.resultKey === n);
                 }
                 return (
                   te.value &&
@@ -8748,11 +8748,10 @@ a());
               return a.value.has(t);
             }
             function je(e) {
-              if ("all" === e) return Be.value.length;
-              const [a, n] = e.split("_");
-              return Be.value.filter(
-                (e) => e.genderKey === a && e.resultKey === n,
-              ).length;
+              if ('all' === e) return Be.value.length;
+              const [a, n] = e.split('_');
+              const mappedGender = a === 'male' ? 'female' : 'male';
+              return Be.value.filter(e => e.genderKey === mappedGender && e.resultKey === n).length;
             }
             function Ye(e) {
               const a = r.find((a) => a.key === e);
