@@ -8660,10 +8660,10 @@ a());
                           resultKey: i,
                         });
                   };
-                  (n(a.female.defeat, "male", "defeat"),
-                    n(a.female.victory, "male", "victory"),
-                    n(a.male.defeat, "female", "defeat"),
-                    n(a.male.victory, "female", "victory"));
+                  (n(a.male.defeat, "female", "defeat"),
+                    n(a.male.victory, "female", "victory"),
+                    n(a.female.defeat, "male", "defeat"),
+                    n(a.female.victory, "male", "victory"));
                 }
                 return e;
               }),
@@ -8694,8 +8694,9 @@ a());
             const Ve = (0, t.computed)(() => {
                 let e = Be.value;
                 if ("all" !== ne.value) {
-                  const [a, n] = ne.value.split("_");
-                  e = e.filter((e) => e.genderKey === a && e.resultKey === n);
+                  const [a, n] = ne.value.split('_');
+                  const flippedGender = a === 'male' ? 'female' : 'male';
+                  e = e.filter(e => e.genderKey === flippedGender && e.resultKey === n); 
                 }
                 return (
                   te.value &&
