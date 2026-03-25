@@ -8660,10 +8660,10 @@ a());
                           resultKey: i,
                         });
                   };
-                  (n(a.male.defeat, "male", "defeat"),
-                    n(a.male.victory, "male", "victory"),
-                    n(a.female.defeat, "female", "defeat"),
-                    n(a.female.victory, "female", "victory"));
+                  (n(a.male.defeat, "female", "defeat"),
+                    n(a.male.victory, "female", "victory"),
+                    n(a.female.defeat, "male", "defeat"),
+                    n(a.female.victory, "male", "victory"));
                 }
                 return e;
               }),
