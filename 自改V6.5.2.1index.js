@@ -8656,7 +8656,7 @@ a());
                           imageIndex: n,
                           characterName: a.characterName,
                           resourceName: a.resourceName,
-                          wgenderKey: t,
+                          genderKey: t,
                           resultKey: i,
                         });
                   };
