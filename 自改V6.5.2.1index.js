@@ -8657,6 +8657,7 @@ a());
                           characterName: a.characterName,
                           resourceName: a.resourceName,
                           genderKey: t,
+                          urlGenderKey: t,
                           resultKey: i,
                         });
                   };
@@ -8763,7 +8764,7 @@ a());
               ).length;
             }
             function Oe(e) {
-              const a = "male" === e.genderKey ? "女u" : "男u";
+              const a = "male" === e.urlGenderKey ? "女u" : "男u";
               const n = "victory" === e.resultKey ? "战胜事件" : "战败事件";
               const charPath = e.resourceName || e.characterName;
               return `https://img.vinsimage.org/性斗学园/cg/${charPath}/${a}/${n}/${e.imageName}`;
