@@ -8660,10 +8660,10 @@ a());
                           resultKey: i,
                         });
                   };
-                  (n(a.male.defeat, "female", "defeat"),
-                    n(a.male.victory, "female", "victory"),
-                    n(a.female.defeat, "male", "defeat"),
-                    n(a.female.victory, "male", "victory"));
+                  (n(a.male.defeat, "male", "defeat"),
+                    n(a.male.victory, "male", "victory"),
+                    n(a.female.defeat, "female", "defeat"),
+                    n(a.female.victory, "female", "victory"));
                 }
                 return e;
               }),
@@ -8711,8 +8711,7 @@ a());
                 let e = Be.value;
                 if ("all" !== ne.value) {
                   const [a, n] = ne.value.split("_");
-                  const mappedGender = a === 'male' ? 'female' : 'male';
-                  e = e.filter(e => e.genderKey === mappedGender && e.resultKey === n);
+                  e = e.filter(e => e.genderKey === a && e.resultKey === n);
                 }
                 return (
                   te.value &&
@@ -8750,8 +8749,7 @@ a());
             function je(e) {
               if ('all' === e) return Be.value.length;
               const [a, n] = e.split('_');
-              const mappedGender = a === 'male' ? 'female' : 'male';
-              return Be.value.filter(e => e.genderKey === mappedGender && e.resultKey === n).length;
+              return Be.value.filter(e => e.genderKey === a && e.resultKey === n).length;
             }
             function Ye(e) {
               const a = r.find((a) => a.key === e);
