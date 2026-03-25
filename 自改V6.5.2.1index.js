@@ -8694,7 +8694,7 @@ a());
             const Ve = (0, t.computed)(() => {
                 let e = Be.value;
                 if ("all" !== ne.value) {
-                  const [a, n] = ne.value.split('_');
+                  const [a, n] = ne.value.split("_");
                   e = e.filter((e) => e.genderKey === a && e.resultKey === n);
                 }
                 return (
@@ -8710,7 +8710,7 @@ a());
               Se = (0, t.computed)(() => {
                 let e = Be.value;
                 if ("all" !== ne.value) {
-                  const [a, n] = ne.value.split('_');
+                  const [a, n] = ne.value.split("_");
                   e = e.filter((e) => e.genderKey === a && e.resultKey === n);
                 }
                 return (
